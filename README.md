@@ -91,8 +91,8 @@ project/
 │
 ├── main.py
 └── templates/
-    ├── index.html
-    └── files.html
+    ├── index.jinja
+    └── files.jinja
 ```
 
 ---
@@ -140,7 +140,7 @@ A aplicação estará disponível em `http://localhost:8000/`.
 
 ## Templates
 
-### `index.html`
+### index.jinja
 
 ```html
 <!DOCTYPE html>
@@ -168,7 +168,7 @@ A aplicação estará disponível em `http://localhost:8000/`.
 
 ---
 
-### `files.html`
+### files.jinja
 
 ```html
 <!DOCTYPE html>
