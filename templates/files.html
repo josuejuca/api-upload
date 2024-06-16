@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uploaded Files</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Uploaded Files v2</h2>
+        <div id="file-list"></div>
+        <a href="/" class="btn btn-primary mt-3">Upload another file</a>
+    </div>
+    
+    <script>
+        async function fetchFileTree() {
+            try {
+                let response = await fetch('/filetree/');
+                let data = await response.json();
+                let fileTreeContainer = document.getElementById('file-list');
+                fileTreeContainer.innerHTML = generateFileTree(data, '');
+            } catch (error) {
+                console.error('Error fetching file tree:', error);
+            }
+        }
+
+        function generateFileTree(node, path) {
+            let html = '<ul class="list-group">';
+            for (let [name, child] of Object.entries(node)) {
+                let fullPath = path ? path + '/' + name : name;
+                if (child === null) {
+                    html += `<li class="list-group-item">
+                                <a href="/uploads/${fullPath}">${name}</a>
+                             </li>`;
+                } else {
+                    html += `<li class="list-group-item">
+                                <strong>${name}</strong>
+                                ${generateFileTree(child, fullPath)}
+                             </li>`;
+                }
+            }
+            html += '</ul>';
+            return html;
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchFileTree);
+    </script>
+</body>
+</html>
