@@ -1,207 +1,119 @@
-# API de Upload de Arquivos com FastAPI
+### 1. **Rota Principal (Página de Upload)**
+- **Método**: GET
+- **Endpoint**: `/`
+- **Descrição**: Retorna a página HTML principal para o upload de arquivos.
+- **Resposta**: HTML da página `index.html`.
 
-Esta API permite o upload de arquivos, visualização de uma lista de arquivos enviados e acesso aos arquivos enviados. A interface do usuário é construída usando Bootstrap e renderizada com Jinja2.
+**Uso**: Acesse o endereço base do servidor (ex.: `http://localhost:8000/`) no navegador para visualizar a página de upload de arquivos.
 
-## Endpoints
+### 2. **Upload de Arquivo**
+- **Método**: POST
+- **Endpoint**: `/uploadfile/`
+- **Descrição**: Permite o upload de um arquivo.
+- **Parâmetros**: `file` (UploadFile) - O arquivo a ser carregado.
+- **Resposta**: JSON com o nome do arquivo e status de sucesso ou erro.
 
-### `GET /`
+**Uso**: Faça uma solicitação POST para `http://localhost:8000/uploadfile/` com o arquivo como dado do formulário.
 
-Renderiza um formulário HTML para fazer o upload de arquivos.
+### 3. **Criar Diretório**
+- **Método**: POST
+- **Endpoint**: `/createdir/`
+- **Descrição**: Cria um novo diretório.
+- **Parâmetros**: `directory_name` (str) - O nome do diretório a ser criado.
+- **Resposta**: JSON com o caminho do diretório e status de sucesso ou erro.
 
-#### Exemplo de Requisição
-
-```http
-GET /
-```
-
-#### Exemplo de Resposta
-
-Um formulário HTML com um campo para selecionar um arquivo e um botão para enviar.
-
----
-
-### `POST /uploadfile/`
-
-Faz o upload de um arquivo para o servidor.
-
-#### Parâmetros
-
-- `file` (form-data): O arquivo a ser enviado.
-
-#### Exemplo de Requisição
-
-```http
-POST /uploadfile/
-Content-Type: multipart/form-data
-
-file: <arquivo>
-```
-
-#### Exemplo de Resposta
-
+**Uso**: Faça uma solicitação POST para `http://localhost:8000/createdir/` com um JSON no corpo contendo o nome do diretório:
 ```json
 {
-    "filename": "example.txt",
-    "status": "uploaded successfully"
+    "directory_name": "novo_diretorio"
 }
 ```
 
----
+### 4. **Pesquisar Arquivos e Diretórios**
+- **Método**: GET
+- **Endpoint**: `/search/`
+- **Descrição**: Pesquisa arquivos e diretórios com base em um termo de pesquisa.
+- **Parâmetros**: `search_term` (str) - O termo de pesquisa.
+- **Resposta**: JSON com uma lista de correspondências.
 
-### `GET /files/`
+**Uso**: Faça uma solicitação GET para `http://localhost:8000/search/?search_term=termo`.
 
-Renderiza uma página HTML que lista todos os arquivos enviados com links para acessá-los.
+### 5. **Renomear Arquivo ou Diretório**
+- **Método**: PUT
+- **Endpoint**: `/rename/`
+- **Descrição**: Renomeia um arquivo ou diretório.
+- **Parâmetros**: `old_name` (str) - O nome atual do arquivo ou diretório.
+              `new_name` (str) - O novo nome.
+- **Resposta**: JSON com os nomes antigo e novo e status de sucesso ou erro.
 
-#### Exemplo de Requisição
-
-```http
-GET /files/
+**Uso**: Faça uma solicitação PUT para `http://localhost:8000/rename/` com um JSON no corpo contendo os nomes antigo e novo:
+```json
+{
+    "old_name": "nome_antigo.txt",
+    "new_name": "nome_novo.txt"
+}
 ```
 
-#### Exemplo de Resposta
+### 6. **Apagar Arquivo ou Diretório**
+- **Método**: DELETE
+- **Endpoint**: `/delete/`
+- **Descrição**: Apaga um arquivo ou diretório.
+- **Parâmetros**: `item_name` (str) - O nome do arquivo ou diretório a ser apagado.
+- **Resposta**: JSON com o nome do item e status de sucesso ou erro.
 
-Uma página HTML com uma lista de arquivos enviados.
-
----
-
-### `GET /uploads/{filename}`
-
-Serve um arquivo específico enviado anteriormente.
-
-#### Parâmetros
-
-- `filename`: O nome do arquivo a ser visualizado.
-
-#### Exemplo de Requisição
-
-```http
-GET /uploads/example.txt
+**Uso**: Faça uma solicitação DELETE para `http://localhost:8000/delete/` com um JSON no corpo contendo o nome do item:
+```json
+{
+    "item_name": "nome_do_arquivo.txt"
+}
 ```
 
-#### Exemplo de Resposta
+### 7. **Mover Arquivo ou Diretório**
+- **Método**: POST
+- **Endpoint**: `/move/`
+- **Descrição**: Move um arquivo ou diretório para outro diretório.
+- **Parâmetros**: `item_name` (str) - O nome do arquivo ou diretório a ser movido.
+              `target_directory` (str) - O diretório de destino.
+- **Resposta**: JSON com o nome do item, diretório de destino e status de sucesso ou erro.
 
-O conteúdo do arquivo solicitado.
-
----
-
-## Estrutura do Projeto
-
-```
-project/
-│
-├── main.py
-└── templates/
-    ├── index.jinja
-    └── files.jinja
-```
-
----
-
-## Dependências
-
-- `fastapi`
-- `uvicorn`
-- `jinja2`
-- `aiofiles`
-
-Para instalar as dependências, execute:
-
-```sh
-pip install fastapi uvicorn jinja2 aiofiles
+**Uso**: Faça uma solicitação POST para `http://localhost:8000/move/` com um JSON no corpo contendo o nome do item e o diretório de destino:
+```json
+{
+    "item_name": "nome_do_arquivo.txt",
+    "target_directory": "diretorio_destino"
+}
 ```
 
----
+### 8. **Árvore de Arquivos e Diretórios**
+- **Método**: GET
+- **Endpoint**: `/filetree/`
+- **Descrição**: Retorna uma estrutura hierárquica de todos os arquivos e diretórios.
+- **Resposta**: JSON representando a árvore de diretórios.
 
-## Executando a Aplicação
+**Uso**: Faça uma solicitação GET para `http://localhost:8000/filetree/`.
 
-Para iniciar a aplicação, execute o comando:
+### 9. **Lista de Arquivos (HTML)**
+- **Método**: GET
+- **Endpoint**: `/files/`
+- **Descrição**: Retorna uma página HTML listando todos os arquivos.
+- **Resposta**: HTML da página `files.html`.
 
-```sh
-uvicorn main:app --reload
-```
+**Uso**: Acesse `http://localhost:8000/files/` no navegador para visualizar a lista de arquivos.
 
-A aplicação estará disponível em `http://localhost:8000/`.
+### 10. **Monitoramento de Arquivos**
+- **Método**: GET
+- **Endpoint**: `/monitor/`
+- **Descrição**: Retorna informações sobre os arquivos no diretório.
+- **Resposta**: JSON com as seguintes informações:
+  - `total_files`: Número total de arquivos.
+  - `total_size`: Tamanho total do diretório em bytes.
+  - `image_files`: Quantidade de arquivos de imagem.
+  - `video_files`: Quantidade de arquivos de vídeo.
+  - `pdf_files`: Quantidade de arquivos PDF.
+  - `excel_files`: Quantidade de arquivos de planilha (Excel).
+  - `word_files`: Quantidade de arquivos de texto (Word).
+  - `powerpoint_files`: Quantidade de arquivos de apresentação (PowerPoint).
 
----
+**Uso**: Faça uma solicitação GET para `http://localhost:8000/monitor/`.
 
-## Exemplos de Uso
-
-### Upload de Arquivo
-
-1. Acesse `http://localhost:8000/`.
-2. Selecione um arquivo e clique no botão "Upload".
-
-### Listar Arquivos Enviados
-
-1. Acesse `http://localhost:8000/files/`.
-2. Veja a lista de arquivos enviados. Cada arquivo possui um link para visualizá-lo.
-
----
-
-## Templates
-
-### index.jinja
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Upload</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container mt-5">
-        <h2>Upload File</h2>
-        <form action="/uploadfile/" enctype="multipart/form-data" method="post">
-            <div class="form-group">
-                <label for="file">Choose file</label>
-                <input type="file" class="form-control" id="file" name="file" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Upload</button>
-        </form>
-    </div>
-</body>
-</html>
-```
-
----
-
-### files.jinja
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uploaded Files</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container mt-5">
-        <h2>Uploaded Files</h2>
-        <ul class="list-group">
-            {% for file in files %}
-                <li class="list-group-item">
-                    <a href="/uploads/{{ file }}">{{ file }}</a>
-                </li>
-            {% endfor %}
-        </ul>
-        <a href="/" class="btn btn-primary mt-3">Upload another file</a>
-    </div>
-</body>
-</html>
-```
-
----
-
-## Notas
-
-- Certifique-se de que o diretório `uploads` existe no diretório do projeto. O FastAPI irá armazenar os arquivos enviados nesse diretório.
-- A aplicação está configurada para rodar na porta 8000. Você pode alterar isso no comando `uvicorn` ou na configuração do próprio `main.py`.
-
----
-
- 
+Essas rotas cobrem diversas funcionalidades para gerenciar e monitorar arquivos e diretórios em um servidor utilizando FastAPI.
