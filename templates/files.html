@@ -1,50 +1,145 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uploaded Files</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arquivos Enviados</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        .file-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+        }
+
+        .original-name {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+    </style>
 </head>
-<body>
-    <div class="container mt-5">
-        <h2>Uploaded Files v2</h2>
-        <div id="file-list"></div>
-        <a href="/" class="btn btn-primary mt-3">Upload another file</a>
+
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="card shadow-sm p-4">
+            <h3 class="mb-4 text-center">Arquivos Enviados</h3>
+            <div id="alert-area"></div>
+            <div id="file-list"></div>
+            <a href="/" class="btn btn-outline-primary mt-4 w-100">
+                <i class="bi bi-upload me-2"></i>Enviar outro arquivo
+            </a>
+            
+        </div>
     </div>
-    
+
+    <!-- Toast container -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055">
+        <div id="toastCopy" class="toast bg-success text-white" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-body">
+                Link copiado com sucesso!
+            </div>
+        </div>
+    </div>
+
+
     <script>
+        let originalNamesMap = {};
+
         async function fetchFileTree() {
             try {
-                let response = await fetch('/filetree/');
-                let data = await response.json();
-                let fileTreeContainer = document.getElementById('file-list');
+                const response = await fetch('/filetree/');
+                const data = await response.json();
+                const originals = await fetch('/uploaded-list/');
+                originalNamesMap = await originals.json();
+
+                const fileTreeContainer = document.getElementById('file-list');
                 fileTreeContainer.innerHTML = generateFileTree(data, '');
             } catch (error) {
-                console.error('Error fetching file tree:', error);
+                console.error('Erro ao buscar os arquivos:', error);
             }
+        }
+
+        function showAlertIfNeeded() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get("success") === "true") {
+                const alertHtml = `
+                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                    Arquivo enviado com sucesso!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>`;
+                document.getElementById("alert-area").innerHTML = alertHtml;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            showAlertIfNeeded();
+            fetchFileTree();
+        });
+
+        function getFileIcon(name) {
+            const ext = name.split('.').pop().toLowerCase();
+            if (['png', 'jpg', 'jpeg', 'gif', 'bmp'].includes(ext)) return 'bi-file-image';
+            if (['mp4', 'avi', 'mov', 'mkv'].includes(ext)) return 'bi-file-play';
+            if (['pdf'].includes(ext)) return 'bi-file-pdf';
+            if (['doc', 'docx'].includes(ext)) return 'bi-file-word';
+            if (['xls', 'xlsx'].includes(ext)) return 'bi-file-excel';
+            if (['ppt', 'pptx'].includes(ext)) return 'bi-file-earmark-slides';
+            if (['zip', 'rar', '7z'].includes(ext)) return 'bi-file-zip';
+            return 'bi-file-earmark';
         }
 
         function generateFileTree(node, path) {
             let html = '<ul class="list-group">';
-            for (let [name, child] of Object.entries(node)) {
-                let fullPath = path ? path + '/' + name : name;
+            for (const [name, child] of Object.entries(node)) {
+                const fullPath = path ? `${path}/${name}` : name;
+                const fileUrl = `/uploads/${fullPath}`;
+                const originalName = originalNamesMap[name] || name;
+
                 if (child === null) {
-                    html += `<li class="list-group-item">
-                                <a href="/uploads/${fullPath}">${name}</a>
-                             </li>`;
+                    html += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex flex-column text-truncate" style="max-width: 70%">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi ${getFileIcon(name)} file-icon text-primary"></i>
+                                    <a href="${fileUrl}" target="_blank" class="text-decoration-none text-dark">${name}</a>
+                                </div>
+                                <div class="original-name">Original: ${originalName}</div>
+                            </div>
+                            <div>
+                                <a href="${fileUrl}" download class="btn btn-sm btn-outline-success me-2" title="Baixar">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline-secondary" title="Copiar link" onclick="copyToClipboard('${location.origin}${fileUrl}')">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+                        </li>`;
                 } else {
-                    html += `<li class="list-group-item">
-                                <strong>${name}</strong>
-                                ${generateFileTree(child, fullPath)}
-                             </li>`;
+                    html += `
+                        <li class="list-group-item">
+                            <i class="bi bi-folder-fill text-warning me-2"></i><strong>${name}</strong>
+                            ${generateFileTree(child, fullPath)}
+                        </li>`;
                 }
             }
             html += '</ul>';
             return html;
         }
 
-        document.addEventListener('DOMContentLoaded', fetchFileTree);
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = new bootstrap.Toast(document.getElementById('toastCopy'));
+                toast.show();
+            }).catch(err => {
+                console.error('Erro ao copiar link:', err);
+            });
+        }
+
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
